@@ -6,7 +6,7 @@ import {
 } from 'watson-react-components';
 import recognizeMicrophone from 'watson-speech/speech-to-text/recognize-microphone';
 import recognizeFile from 'watson-speech/speech-to-text/recognize-file';
-
+import uuidv4 from 'uuid/v4';
 import ModelDropdown from './model-dropdown.jsx';
 import Transcript from './transcript.jsx';
 import { Keywords, getKeywordsSummary } from './keywords.jsx';
@@ -22,12 +22,14 @@ export class Demo extends Component {
   constructor(props) {
     super();
     this.state = {
-      model: 'en-US_BroadbandModel',
+      model: 'en-US_NarrowbandModel',
+      customization_id: 'e8a745d5-f708-41de-b77a-4e6d08b81b29',
       rawMessages: [],
       formattedMessages: [],
       audioSource: null,
-      speakerLabels: true,
+      speakerLabels: false,
       keywords: this.getKeywords('en-US_BroadbandModel'),
+      agentExtensionId: 'associate01',
       // transcript model and keywords are the state that they were when the button was clicked.
       // Changing them during a transcription would cause a mismatch between the setting sent to the
       // service and what is displayed on the demo, and could cause bugs.
@@ -37,6 +39,7 @@ export class Demo extends Component {
         speakerLabels: false,
       },
       error: null,
+      sessionId: null,
     };
 
     this.handleSampleClick = this.handleSampleClick.bind(this);
@@ -61,6 +64,8 @@ export class Demo extends Component {
     this.supportsSpeakerLabels = this.supportsSpeakerLabels.bind(this);
     this.handleSpeakerLabelsChange = this.handleSpeakerLabelsChange.bind(this);
     this.handleKeywordsChange = this.handleKeywordsChange.bind(this);
+    this.handleAgentExtensionIdChange = this.handleAgentExtensionIdChange.bind(this);
+    this.handleCustomizationIdChange = this.handleCustomizationIdChange.bind(this);
     this.getKeywordsArr = this.getKeywordsArr.bind(this);
     this.getKeywordsArrUnique = this.getKeywordsArrUnique.bind(this);
     this.getFinalResults = this.getFinalResults.bind(this);
@@ -109,6 +114,7 @@ export class Demo extends Component {
       smart_formatting: true,
       format: true, // adds capitals, periods, and a few other things (client-side)
       model: this.state.model,
+      customization_id: this.state.customization_id,
       objectMode: true,
       interim_results: true,
       // note: in normal usage, you'd probably set this a bit higher
@@ -159,8 +165,10 @@ export class Demo extends Component {
   handleUploadClick() {
     if (this.state.audioSource === 'upload') {
       this.stopTranscription();
+      this.state.sessionId = null;
     } else {
       this.dropzone.open();
+      this.state.sessionId = uuidv4();
     }
   }
 
@@ -273,6 +281,25 @@ export class Demo extends Component {
   handleFormattedMessage(msg) {
     const { formattedMessages } = this.state;
     this.setState({ formattedMessages: formattedMessages.concat(msg) });
+    if (msg && msg.results && msg.results[0].final && msg.results[0].final === true) {
+      console.log(`request: ${msg}`)
+      //set sessionId and agentExtensionId
+      msg.sessionId = this.state.sessionId;
+      msg.agentExtensionId = this.state.agentExtensionId;
+      fetch('api/orchestrator', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(msg),
+      }).then((data) => {
+        console.log(`done with orchestrator request: ${data}`);
+      }).catch((err) => {
+        console.error(`error calling orchestrator: ${JSON.stringify(err)}`);
+      })
+      console.log(`--> ${JSON.stringify(msg)}`);
+    }
   }
 
   handleTranscriptEnd() {
@@ -345,6 +372,14 @@ export class Demo extends Component {
 
   handleKeywordsChange(e) {
     this.setState({ keywords: e.target.value });
+  }
+
+  handleAgentExtensionIdChange(e) {
+    this.setState({ agentExtensionId: e.target.value });
+  }
+
+  handleCustomizationIdChange(e) {
+    this.setState({ customization_id: e.target.value });
   }
 
   // cleans up the keywords string into an array of individual, trimmed, non-empty keywords/phrases
@@ -494,6 +529,17 @@ export class Demo extends Component {
               />
             </p>
 
+            <p>Customization Id:
+              <input
+                value={this.state.customization_id}
+                onChange={this.handleCustomizationIdChange}
+                type="text"
+                id="customizationId"
+                placeholder="Custom langauge model id"
+                className="base--input"
+              />
+            </p>
+
             <p className={this.supportsSpeakerLabels() ? 'base--p' : 'base--p_light'}>
               <input
                 className="base--checkbox"
@@ -509,6 +555,7 @@ export class Demo extends Component {
             </p>
 
           </div>
+
           <div className="column">
 
             <p>Keywords to spot: <input
@@ -517,6 +564,19 @@ export class Demo extends Component {
               type="text"
               id="keywords"
               placeholder="Type comma separated keywords here (optional)"
+              className="base--input"
+            />
+            </p>
+
+          </div>
+          <div className="column">
+
+            <p>Agent Extension Id: <input
+              value={this.state.agentExtensionId}
+              onChange={this.handleAgentExtensionIdChange}
+              type="text"
+              id="agentExtensionId"
+              placeholder="Agent Extension Id"
               className="base--input"
             />
             </p>

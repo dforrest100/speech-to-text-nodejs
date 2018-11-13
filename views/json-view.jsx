@@ -36,6 +36,7 @@ function renderRawMessage(msg, i) {
   if (!msg) {
     return null; // (<div key={`raw-${i}`} />);
   }
+  console.log(`-->rawMessage: ${JSON.stringify(msg)}`);
   return (
     <div key={`raw-${i}`}>
       {msg.sent === true

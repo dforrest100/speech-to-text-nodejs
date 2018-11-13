@@ -16,6 +16,7 @@
 
 // Module dependencies
 const express = require('express');
+const bodyParser = require('body-parser')
 const expressBrowserify = require('express-browserify');
 const path = require('path');
 
@@ -48,4 +49,7 @@ module.exports = (app) => {
   // Configure Express
   app.use(express.static(path.join(__dirname, '..', 'public')));
   app.use(express.static(path.join(__dirname, '..', 'node_modules/watson-react-components/dist/')));
+
+  // Configure Express Body Parsers
+  app.use(bodyParser.json());
 };

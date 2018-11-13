@@ -11,7 +11,7 @@ export default function Layout({ children }) {
     <html lang="en">
       <head>
         <title>
-          Speech to Text Demo
+          Associate Assist - Speech to Text
         </title>
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
@@ -22,13 +22,13 @@ export default function Layout({ children }) {
       </head>
       <body>
         <Header
-          mainBreadcrumbs="Speech to Text"
+          mainBreadcrumbs="Associate Assist - Speech to Text"
           mainBreadcrumbsUrl="https://www.ibm.com/watson/services/speech-to-text/"
           subBreadcrumbs="Speech to Text Demo"
           subBreadcrumbsUrl="https://speech-to-text-demo.ng.bluemix.net"
         />
         <Jumbotron
-          serviceName="Speech to Text"
+          serviceName="Associate Assist - Watson Speech to Text"
           repository="https://github.com/watson-developer-cloud/speech-to-text-nodejs"
           documentation="https://console.bluemix.net/docs/services/speech-to-text/getting-started.html"
           apiReference="http://www.ibm.com/watson/developercloud/speech-to-text/api"
@@ -38,9 +38,7 @@ export default function Layout({ children }) {
           description={DESCRIPTION}
         />
 
-        <div className="_container _container_large gdpr-info">
-          {GDPR_INFO}
-        </div>
+
         <div id="root">
           {children}
         </div>
