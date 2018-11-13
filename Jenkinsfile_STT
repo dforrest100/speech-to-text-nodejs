@@ -1,0 +1,23 @@
+node {
+    def app
+
+    stage('Clone repository') {
+        /* Let's make sure we have the repository cloned to our workspace */
+
+        checkout scm
+    }
+
+    stage('Build image') {
+        /* This builds the actual image; synonymous to
+         * docker build on the command line. */
+
+             sh 'docker build -t speech-to-text-nodejs:latest speech-to-text-nodejs'
+    }
+ stage('Deploy') {
+             sh 'docker save -o /var/jenkins_home/jobs/Watson_STT/stt.tar.gz speech-to-text-nodejs:latest'
+             sh 'sudo docker load < stt.tar.gz'
+             sh 'sleep 3'
+             sh 'sudo  docker run --log-opt tag="STT" -v /opt/fischer/speech-to-text-nodejs/config:/opt/fischer/speech-to-text-nodejs/config:ro -p 3004:3004 -d speech-to-text-nodejs"'
+    }
+
+}
